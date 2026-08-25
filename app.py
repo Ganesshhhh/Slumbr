@@ -207,6 +207,17 @@ def predict_and_save(values):
     save_entry(entry)
     return prediction, confidence, style
 
+def fix_sleep_duration_rollover():
+    val = st.session_state["sleep_duration"]
+    whole_hours = int(val)
+    tenths = round((val - whole_hours) * 10)
+    if tenths >= 6:
+        whole_hours += 1
+        tenths = 0
+    elif tenths < 0:
+        tenths = 0
+    st.session_state["sleep_duration"] = round(whole_hours + tenths / 10, 2)
+
 def logo_data_uri():
     with open(os.path.join("assets", "slumbr_logo.webp"), "rb") as f:
         return "data:image/webp;base64," + base64.b64encode(f.read()).decode("ascii")
@@ -223,14 +234,7 @@ with tab_checkin:
     with st.container(border=True):
         st.markdown('<div class="ss-section-title">Tonight\'s sleep</div>', unsafe_allow_html=True)
         r1 = st.columns(4, gap="medium")
-        with r1[0]:
-            st.markdown('<div style="font-size:.72rem;color:var(--ink);margin-bottom:.25rem;">Sleep Duration</div>', unsafe_allow_html=True)
-            hcol, mcol = st.columns(2, gap="small")
-            with hcol:
-                sleep_hours = st.number_input("Hours", 0, 14, 7, 1, key="sleep_hours", label_visibility="collapsed")
-            with mcol:
-                sleep_minutes = st.selectbox("Minutes", [0, 10, 20, 30, 40, 50], index=0, key="sleep_minutes", label_visibility="collapsed")
-            sleep_duration = sleep_hours + sleep_minutes / 60
+        with r1[0]: sleep_duration = st.number_input("Sleep Duration (hours)", 0.0, 14.0, 7.0, 0.1, format="%.2f", key="sleep_duration", on_change=fix_sleep_duration_rollover)
         with r1[1]: stress_level = st.slider("Stress Level (1-10)", 1, 10, 5)
         with r1[2]: physical_activity = st.number_input("Activity (min/day)", 0, 300, 45)
         with r1[3]: bmi_category = st.selectbox("BMI Category", metadata["bmi_options"])
