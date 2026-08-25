@@ -75,9 +75,12 @@ button[data-baseweb="tab"][aria-selected="true"]::after {{ content:""; position:
 /* Compact Streamlit controls. */
 div[data-baseweb="input"], div[data-baseweb="select"]>div {{ background-color:rgba(239,238,226,.76)!important; border-color:rgba(105,103,94,.38)!important; border-radius:4px!important; min-height:2.2rem; }}
 label {{ color:var(--ink)!important; font-size:.72rem!important; }}
-/* "Press Enter to apply" hint: align it under the field instead of Streamlit's default floating position. */
-[data-testid="InputInstructions"] {{ position:static!important; display:block; width:100%; text-align:right; font-size:.6rem!important; line-height:1.3; color:var(--muted)!important; opacity:.85; margin-top:.15rem; white-space:normal; }}
-div[data-testid="stNumberInput"], div[data-testid="stTextInput"], div[data-testid="stDateInput"] {{ display:flex; flex-direction:column; }}
+/* "Press Enter to apply" hint: Streamlit wraps it in an absolutely-positioned div (left:0, right:auto)
+   that overlaps the typed value. Retarget that wrapper (parent of the span) so the hint renders
+   below the field instead, right-aligned and out of the way. */
+div:has(>[data-testid="InputInstructions"]) {{ position:absolute!important; top:100%!important; bottom:auto!important; left:auto!important; right:0!important; margin-top:.15rem!important; white-space:nowrap; pointer-events:none; }}
+[data-testid="InputInstructions"] {{ font-size:.58rem!important; color:var(--muted)!important; opacity:.85; }}
+div[data-testid="stNumberInput"], div[data-testid="stTextInput"], div[data-testid="stDateInput"] {{ margin-bottom:.9rem; }}
 .stButton>button, .stDownloadButton>button {{ background:var(--ink); color:#F2F0E5; border:1px solid var(--ink); border-radius:3px; padding:.48rem .9rem; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.66rem; box-shadow:none; }}
 .stButton>button:hover, .stDownloadButton>button:hover {{ background:var(--accent); border-color:var(--accent); color:#fff; }}
 .stButton>button[kind="primary"] {{ background:var(--accent)!important; border-color:var(--accent)!important; color:#fff!important; }}
@@ -220,7 +223,14 @@ with tab_checkin:
     with st.container(border=True):
         st.markdown('<div class="ss-section-title">Tonight\'s sleep</div>', unsafe_allow_html=True)
         r1 = st.columns(4, gap="medium")
-        with r1[0]: sleep_duration = st.number_input("Sleep Duration (hours)", 0.0, 14.0, 7.0, 0.5, format="%.1f")
+        with r1[0]:
+            st.markdown('<div style="font-size:.72rem;color:var(--ink);margin-bottom:.25rem;">Sleep Duration</div>', unsafe_allow_html=True)
+            hcol, mcol = st.columns(2, gap="small")
+            with hcol:
+                sleep_hours = st.number_input("Hours", 0, 14, 7, 1, key="sleep_hours", label_visibility="collapsed")
+            with mcol:
+                sleep_minutes = st.selectbox("Minutes", [0, 10, 20, 30, 40, 50], index=0, key="sleep_minutes", label_visibility="collapsed")
+            sleep_duration = sleep_hours + sleep_minutes / 60
         with r1[1]: stress_level = st.slider("Stress Level (1-10)", 1, 10, 5)
         with r1[2]: physical_activity = st.number_input("Activity (min/day)", 0, 300, 45)
         with r1[3]: bmi_category = st.selectbox("BMI Category", metadata["bmi_options"])
