@@ -75,6 +75,9 @@ button[data-baseweb="tab"][aria-selected="true"]::after {{ content:""; position:
 /* Compact Streamlit controls. */
 div[data-baseweb="input"], div[data-baseweb="select"]>div {{ background-color:rgba(239,238,226,.76)!important; border-color:rgba(105,103,94,.38)!important; border-radius:4px!important; min-height:2.2rem; }}
 label {{ color:var(--ink)!important; font-size:.72rem!important; }}
+/* "Press Enter to apply" hint: align it under the field instead of Streamlit's default floating position. */
+[data-testid="InputInstructions"] {{ position:static!important; display:block; width:100%; text-align:right; font-size:.6rem!important; line-height:1.3; color:var(--muted)!important; opacity:.85; margin-top:.15rem; white-space:normal; }}
+div[data-testid="stNumberInput"], div[data-testid="stTextInput"], div[data-testid="stDateInput"] {{ display:flex; flex-direction:column; }}
 .stButton>button, .stDownloadButton>button {{ background:var(--ink); color:#F2F0E5; border:1px solid var(--ink); border-radius:3px; padding:.48rem .9rem; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.66rem; box-shadow:none; }}
 .stButton>button:hover, .stDownloadButton>button:hover {{ background:var(--accent); border-color:var(--accent); color:#fff; }}
 .stButton>button[kind="primary"] {{ background:var(--accent)!important; border-color:var(--accent)!important; color:#fff!important; }}
@@ -217,7 +220,7 @@ with tab_checkin:
     with st.container(border=True):
         st.markdown('<div class="ss-section-title">Tonight\'s sleep</div>', unsafe_allow_html=True)
         r1 = st.columns(4, gap="medium")
-        with r1[0]: sleep_duration = st.number_input("Sleep Duration (hours)", 0.0, 14.0, 7.0, 0.1)
+        with r1[0]: sleep_duration = st.number_input("Sleep Duration (hours)", 0.0, 14.0, 7.0, 0.5, format="%.1f")
         with r1[1]: stress_level = st.slider("Stress Level (1-10)", 1, 10, 5)
         with r1[2]: physical_activity = st.number_input("Activity (min/day)", 0, 300, 45)
         with r1[3]: bmi_category = st.selectbox("BMI Category", metadata["bmi_options"])
@@ -261,8 +264,8 @@ with tab_checkin:
                 st.markdown('<div class="ss-result-label">Predicted Sleep Quality</div>', unsafe_allow_html=True)
                 st.markdown(f'<div class="ss-big-result" style="color:{style["color"]};">{style["label"]}</div>', unsafe_allow_html=True)
             with b:
-                st.markdown('<div class="ss-result-label">Confidence</div>', unsafe_allow_html=True)
-                st.markdown(f'<div class="ss-confidence">{confidence:.0%}</div>', unsafe_allow_html=True)
+                st.markdown('<div class="ss-result-label">Points</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="ss-confidence">{style["points"]}</div>', unsafe_allow_html=True)
             with c:
                 st.markdown('<div class="ss-result-label">What this means</div>', unsafe_allow_html=True)
                 meaning = {
