@@ -235,20 +235,20 @@ with tab_checkin:
         st.markdown('<div class="ss-section-title">Tonight\'s sleep</div>', unsafe_allow_html=True)
         r1 = st.columns(4, gap="medium")
         with r1[0]: sleep_duration = st.number_input("Sleep Duration (hours)", 0.0, 14.0, 7.0, 0.1, format="%.2f", key="sleep_duration", on_change=fix_sleep_duration_rollover)
-        with r1[1]: stress_level = st.slider("Stress Level (1-10)", 1, 10, 5)
-        with r1[2]: physical_activity = st.number_input("Activity (min/day)", 0, 300, 45)
-        with r1[3]: bmi_category = st.selectbox("BMI Category", metadata["bmi_options"])
+        with r1[1]: stress_level = st.slider("Stress Level (1-10)", 1, 10, 5, key="stress_level")
+        with r1[2]: physical_activity = st.number_input("Activity (min/day)", 0, 300, 45, key="physical_activity")
+        with r1[3]: bmi_category = st.selectbox("BMI Category", metadata["bmi_options"], key="bmi_category")
         r2 = st.columns(4, gap="medium")
-        with r2[0]: age = st.number_input("Age", 10, 100, 30)
-        with r2[1]: gender = st.selectbox("Gender", metadata["gender_options"])
-        with r2[2]: entry_date = st.date_input("Date", value=date.today(), max_value=date.today())
-        with r2[3]: occupation = st.selectbox("Occupation", metadata["occupation_options"])
+        with r2[0]: age = st.number_input("Age", 10, 100, 30, key="age")
+        with r2[1]: gender = st.selectbox("Gender", metadata["gender_options"], key="gender")
+        with r2[2]: entry_date = st.date_input("Date", value=date.today(), max_value=date.today(), key="entry_date")
+        with r2[3]: occupation = st.selectbox("Occupation", metadata["occupation_options"], key="occupation")
         with st.expander("Additional health details"):
             e1, e2, e3, e4 = st.columns(4, gap="medium")
-            with e1: systolic_bp = st.number_input("Systolic BP", 70, 220, 120)
-            with e2: diastolic_bp = st.number_input("Diastolic BP", 40, 140, 80)
-            with e3: heart_rate = st.number_input("Heart Rate (bpm)", 30, 220, 72)
-            with e4: daily_steps = st.number_input("Daily Steps", 0, 40000, 6000, 100)
+            with e1: systolic_bp = st.number_input("Systolic BP", 70, 220, 120, key="systolic_bp")
+            with e2: diastolic_bp = st.number_input("Diastolic BP", 40, 140, 80, key="diastolic_bp")
+            with e3: heart_rate = st.number_input("Heart Rate (bpm)", 30, 220, 72, key="heart_rate")
+            with e4: daily_steps = st.number_input("Daily Steps", 0, 40000, 6000, 100, key="daily_steps")
 
     left_action, right_action = st.columns([1, 4])
     with left_action:
@@ -256,6 +256,12 @@ with tab_checkin:
     with right_action:
         reset_clicked = st.button("Reset")
     if reset_clicked:
+        for reset_key in (
+            "sleep_duration", "stress_level", "physical_activity", "bmi_category",
+            "age", "gender", "entry_date", "occupation",
+            "systolic_bp", "diastolic_bp", "heart_rate", "daily_steps", "last_result",
+        ):
+            st.session_state.pop(reset_key, None)
         st.rerun()
 
     if predict_clicked:
@@ -335,13 +341,7 @@ with tab_history:
             hist["Activity"] = hist["physical_activity"].map(lambda x: f"{int(x)} min")
             view = hist[["date", "Sleep Quality", "points", "Sleep Duration", "stress_level", "Activity", "bmi_category"]].rename(columns={"date":"Date","points":"Points","stress_level":"Stress","bmi_category":"BMI"})
             st.dataframe(view, use_container_width=True, hide_index=True)
-            csv_bytes = hist.to_csv(index=False).encode("utf-8")
-            json_bytes = json.dumps(log, indent=2).encode("utf-8")
-            b1, b2, b3 = st.columns([1.25, 1.25, 3.5])
-            with b1: st.download_button("Download sleep log", csv_bytes, "slumbr_sleep_log.csv", "text/csv", use_container_width=True)
-            with b2: st.download_button("Download JSON", json_bytes, "slumbr_sleep_log.json", "application/json", use_container_width=True)
-            with b3:
-                if st.button("Clear all logged data"):
-                    clear_log(); st.rerun()
+            if st.button("Clear all logged data"):
+                clear_log(); st.rerun()
         else:
             st.markdown('<div class="ss-empty">Nothing logged yet. Your check-ins will build up here day by day.</div>', unsafe_allow_html=True)
